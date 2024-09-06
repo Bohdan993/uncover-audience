@@ -30,15 +30,13 @@ class TrackingController {
                 throw APIError.ValidationError("Not Found");
             }
 
-            // console.log("HEADERS: ", req.get("origin"));
-
             const isValidDomain = domainServise.validateDomain({
-                "domain": pixelsData?.domain?.domain,
+                "domain": pixelsData?.[0]?.domain?.domain,
                 "expectedDomain": req.get("origin")
             });
 
             if(!isValidDomain) {
-                throw APIError.ValidationError("Validation Error", `${req.get("origin")} is not a valid domain`);
+                throw APIError.ValidationError("Validation Error", `${req.get("origin").replace(/(^\w+:|^)|\//gi, '')} is not a valid domain`);
             }
 
             return res.json({
