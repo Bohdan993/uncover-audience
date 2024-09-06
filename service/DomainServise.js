@@ -2,7 +2,7 @@ class DomainServise {
   validateDomain(domain, expectedDomain){
     if(!domain || !expectedDomain) return false;
 
-    return String(domain).replace(/\\\//gi, '') === String(expectedDomain);
+    return String(domain).replace(/(^\w+:|^)|\//gi, '') === String(expectedDomain).replace(/(^\w+:|^)|\//gi, '');
   }
 }
 
