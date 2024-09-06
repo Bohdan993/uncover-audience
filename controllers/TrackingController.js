@@ -36,7 +36,7 @@ class TrackingController {
             });
 
             if(!isValidDomain) {
-                throw APIError.ValidationError("Validation Error", `${req.get("origin").replace(/(^\w+:|^)|\//gi, '')} is not a valid domain`);
+                throw APIError.ValidationError("Validation Error", `${req.get("origin") ? req.get("origin").replace(/(^\w+:|^)|\//gi, '') : req.hostname} is not a valid domain`);
             }
 
             return res.json({
