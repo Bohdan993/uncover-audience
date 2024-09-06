@@ -38,7 +38,7 @@ class TrackingController {
             });
 
             if(!isValidDomain) {
-                throw APIError.ValidationError("Validation Error", `${req.hostname} is not a valid domain`);
+                throw APIError.ValidationError("Validation Error", `${req.get("origin")} is not a valid domain`);
             }
 
             return res.json({
