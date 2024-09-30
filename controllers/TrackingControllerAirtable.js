@@ -20,20 +20,18 @@ class TrackingControllerAirtable {
             }
 
             const {
-                uaid
+                id
             } = req.query;
 
             let pixelsData = [];
-            pixelsData = await trackingServiseAirtable.getAllDomainPixels(uaid);
-
-            console.log("PixelsData: ", pixelsData);
+            pixelsData = await trackingServiseAirtable.getAllDomainPixels(id);
 
             if(!pixelsData.length) {
                 throw APIError.ValidationError("Not Found");
             }
 
             const isValidDomain = domainServise.validateDomain({
-                "domain": pixelsData?.[0]?.domain?.domain,
+                "domain": pixelsData?.[0]?.domain,
                 "expectedDomain": req.get("origin")
             });
 

@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const router = Router();
 const { query } = require("express-validator");
-const { trackingController } = require("../../controllers/TrackingController");
+const { trackingControllerRetool } = require("../../controllers/TrackingControllerRetool");
 const { trackingControllerAirtable } = require("../../controllers/TrackingControllerAirtable");
 
 router.get(
@@ -11,18 +11,18 @@ router.get(
     .isString()
     .notEmpty()
     .isUUID("4"),
-  trackingController.getAllDomainPixels
+  trackingControllerRetool.getAllDomainPixels
 );
 
 router.get(
   "/get-pixels",
-  query("uaid")
+  query("id")
     .trim()
     .isString()
     .notEmpty()
     .custom(value => {
       if(!/^ua-[a-z0-9]{8}-[0-9]{4}-[a-z0-9]{4}-[a-z0-9]{14}$/.test(value)) {
-        throw new Error("uaid must math pattern /^ua-[a-z0-9]{8}-[0-9]{4}-[a-z0-9]{4}-[a-z0-9]{14}$/");
+        throw new Error("id must math pattern /^ua-[a-z0-9]{8}-[0-9]{4}-[a-z0-9]{4}-[a-z0-9]{14}$/");
       }
       return true;
     }),

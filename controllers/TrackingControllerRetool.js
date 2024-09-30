@@ -1,9 +1,9 @@
 const APIError = require("../exeptions/api-error");
-const { trackingServise } = require("../service/TrackingService");
+const { trackingServiseRetool } = require("../service/TrackingServiceRetool");
 const { validationResult} = require("express-validator");
 const { domainServise } = require("../service/DomainServise");
 
-class TrackingController {
+class TrackingControllerRetool {
     async getAllPixels(req, res, next){
         try {
             return res.json({"status": "ok", "data": []});
@@ -24,7 +24,7 @@ class TrackingController {
             } = req.query;
 
             let pixelsData = [];
-            pixelsData = await trackingServise.getAllDomainPixels(id);
+            pixelsData = await trackingServiseRetool.getAllDomainPixels(id);
 
             if(!pixelsData.length) {
                 throw APIError.ValidationError("Not Found");
@@ -61,5 +61,5 @@ class TrackingController {
 
 
 module.exports = {
-    trackingController: new TrackingController()
+    trackingControllerRetool: new TrackingControllerRetool()
 }

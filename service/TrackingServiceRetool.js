@@ -4,7 +4,7 @@ const {
   domainsvendors: DomainVendor
 } = require("../database/models/index");
 
-class TrackingServise {
+class TrackingServiseRetool {
   async getAllDomainPixels(domainId){
     let result = [];
 
@@ -33,5 +33,5 @@ class TrackingServise {
 }
 
 module.exports = {
-  trackingServise: new TrackingServise()
+  trackingServiseRetool: new TrackingServiseRetool()
 }

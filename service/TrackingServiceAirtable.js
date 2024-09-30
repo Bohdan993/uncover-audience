@@ -3,29 +3,26 @@ const Airtable = require("airtable");
 class TrackingServiseAirtable {
     #base = new Airtable({apiKey: process.env.AIRTABLE_API_TOKEN}).base(process.env.AIRTABLE_BASE_ID);
 
-    async getAllDomainPixels(uaid){
-        const clients = await this.getClients(uaid);
+    async getAllDomainPixels(id){
+        const clients = await this.getClients(id);
         const vendors = await this.getVendors(clients);
-        const clientVendors = await this.getClientVendors(uaid, vendors);
+        const clientVendors = await this.getClientVendors(id, vendors);
 
         return clientVendors.map(cv => ({
             "name": cv.name,
-            "uaid": cv.uaid,
+            "id": cv.id,
             "domain": this.#getClientVendorDomain(cv, clients),
-            "script": this.#createClientVendorScript(cv, vendors)
+            "scripts": this.#parseVendorScripts(this.#createClientVendorScripts(cv, vendors))
         }));
 
     }
 
-    getClients(uaid){
+    getClients(id){
         const result = [];
         const clientPages = this.#base("Clients").select({
-            // Selecting the first 3 records in Grid view:
-            // maxRecords: 3,
             view: "Grid view",
             fields: ["Name", "Domain", "UAID", "Date Created", "Client-Vendor", "Leads Amount"],
-            // filterByFormula: `{UAID}=\"ua-boyzctgl-1727-ofg7-boyzctglofg7b4\"`,
-            filterByFormula: `{UAID}="${uaid}"`
+            filterByFormula: `{UAID}="${id}"`
         });
 
         return new Promise((res, rej) => {
@@ -37,7 +34,7 @@ class TrackingServiseAirtable {
                             "clientId": record.getId(),
                             "name": record.get("Name"),
                             "domain": record.get("Domain"),
-                            "uaid": record.get("UAID"),
+                            "id": record.get("UAID"),
                             "clientVendor": record.get("Client-Vendor"),
                             "leadsAmount": record.get("Leads Amount"),
                             "dateCreated": record.get("Date Created"),
@@ -68,13 +65,9 @@ class TrackingServiseAirtable {
         const allClientsVendors = clients.map(client => client.clientVendor).flat();
 
         const vendorsPages = this.#base("Vendors").select({
-            // Selecting the first 3 records in Grid view:
-            // maxRecords: 3,
             view: "Grid view",
             fields: ["Name", "Status", "script_url", "Connection schema","Client-Vendor"],
             filterByFormula: `AND({Status}="On")`
-            // filterByFormula: `SEARCH("recRnTlLc69MW9j1N", ARRAYJOIN({Client-Vendor}))`
-            // filterByFormula: `AND({Status}="On", OR(${allVendors.map(vendor => "{Client-Vendor}=" + "\"" + vendor + "\"")}))`
         });
 
         return new Promise((res, rej) => {
@@ -110,15 +103,13 @@ class TrackingServiseAirtable {
         });
     }
 
-    getClientVendors(uaid, vendors){
+    getClientVendors(id, vendors){
         const $this = this;
         const result = [];
         const clientVendorPages = this.#base("Client-Vendor").select({
-            // Selecting the first 3 records in Grid view:
-            // maxRecords: 3,
             view: "Grid view",
             fields: ["Name", "Client", "Vendors", "Status","Vendor-ID", "UAID"],
-            filterByFormula: `AND({UAID}="${uaid}", {Status}="On")`
+            filterByFormula: `AND({UAID}="${id}", {Status}="On")`
         });
 
         return new Promise((res, rej) => {
@@ -133,7 +124,7 @@ class TrackingServiseAirtable {
                         "client": record.get("Client"),
                         "vendor": record.get("Vendors"),
                         "vendorId": record.get("Vendor-ID"),
-                        "uaid": record.get("UAID"),
+                        "id": record.get("UAID"),
                     });
                 });
             
@@ -156,7 +147,7 @@ class TrackingServiseAirtable {
         })
     }
 
-    #createClientVendorScript(cv, vendors){
+    #createClientVendorScripts(cv, vendors){
         const replacementMap = {
             "Vendors": "vendor",
             "Client-Vendor": "cv",
@@ -215,6 +206,24 @@ class TrackingServiseAirtable {
         const client = clients.find(client => client.clientId === cv.client[0]);
 
         return client.domain;
+    }
+
+    #parseVendorScripts(scriptsStr = ""){
+        console.log(scriptsStr, "scriptsStr");
+        const regex = /<(?<location>(head|body)*?)>[\s\S]*?<script(?:\s+(?<battrs>[^>]*?)src=["'](?<src>[^"']+)["'](?:\s+(?<aattrs>[^>]*?)?)?)?>(?<content>[\s\S]*?)<\/script>/g;
+        let match;
+        const results = [];
+
+        while ((match = regex.exec(scriptsStr)) !== null) {
+            results.push({
+                location: match.groups.location.trim(),
+                src: match.groups.src || "", // Captures the src if it exists
+                content: match.groups.content.trim(), // Captures the script content, trimming whitespace
+                attributes: ((match.groups.battrs?.trim() || "") + " " + (match.groups.aattrs?.trim() || "")).trim() // Captures other attributes if present
+            });
+        }
+        
+        return results;
     }
 }
 
